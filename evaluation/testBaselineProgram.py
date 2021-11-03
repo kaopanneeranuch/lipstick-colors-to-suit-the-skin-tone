@@ -58,7 +58,7 @@ shootCount = 0
 failCount = 0
 
 # Test sub-dataset path
-testDirPath = "./testDataset/dior/test" # Change para
+testDirPath = "./testDataset/dior/star" # Change para
 
 for img in os.listdir(testDirPath):
     with torch.no_grad():
