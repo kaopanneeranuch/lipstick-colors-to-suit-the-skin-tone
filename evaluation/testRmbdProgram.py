@@ -122,7 +122,7 @@ shootCount = 0
 failCount = 0
 
 # Test sub-dataset dir
-testDirPath = "./testDataset/dior/star" # Change para
+testDirPath = "./testDataset/test" # Change para
 
 
 for img in os.listdir(testDirPath):
