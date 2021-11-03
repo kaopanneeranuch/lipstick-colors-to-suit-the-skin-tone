@@ -58,42 +58,50 @@ shootCount = 0
 failCount = 0
 
 # Test sub-dataset path
-testDirPath = "./testDataset/dior/star" # Change para
+testDirPath = "./testDataset/dior/test" # Change para
 
 for img in os.listdir(testDirPath):
     with torch.no_grad():
         image = Image.open(testDirPath + "/" + img).convert('RGB')
         imgArray = np.array(image)
+        imgArray2 = np.array(image)
         image = to_tensor(image)
         image = torch.unsqueeze(image, 0)
         out = net(image)[0]
         parsing = out.squeeze(0).cpu().numpy().argmax(0)
+        nosePos = np.where(parsing == 10)
         upperLipPos = np.where(parsing == 12)
         lowerLipPos = np.where(parsing == 13)
 
         pointsCount = len(upperLipPos[0]) + len(lowerLipPos[0])
         pointsCountUpper = len(upperLipPos[0])
         pointsCountLower = len(lowerLipPos[0])
+        pointsCountNose = len(nosePos[0])
         rgb = [0, 0, 0]
+        rgbn = [0, 0, 0]
         if len(upperLipPos) > 0:
             rgbUpper = np.sum(imgArray[upperLipPos[0], upperLipPos[1], :], axis=0)
             rgb = np.sum([rgb, rgbUpper], axis=0)
         if len(lowerLipPos) > 0:
             rgbLower = np.sum(imgArray[lowerLipPos[0], lowerLipPos[1], :], axis=0)
             rgb = np.sum([rgb, rgbLower], axis=0)
+        if len(nosePos) > 0:
+            rgbNose = np.sum(imgArray2[nosePos[0], nosePos[1], :], axis=0)
+            rgbn = np.sum([rgbn, rgbNose], axis=0)
         res = [math.floor(i / pointsCount) for i in rgb]
+        ress = [math.floor(i / pointsCountNose) for i in rgbn]
         for i in range(sum):
             ret_dic[i]['distance'] = ColourDistance(res, ret_dic[i]['rgb'])
-        predictTmp = sorted(ret_dic, key=lambda x: float(x['distance']))[:20]
+        predictTmp = sorted(ret_dic, key=lambda x: float(x['distance']))[:5]
         predictRes = []
         for lipstick in predictTmp:
-            predictRes.append(lipstick['id'])
+            predictRes.append(lipstick['lip'])
 
         front = img.split('.')[0]
         imgId = front.split('_')[1]
-        print('imgId: ' + imgId + ', extractRGB: ' + str(res) + ', predictRes: ' + str(predictRes) + ', shoot: ' + str(int(imgId) in predictRes))
+        print('imgId: ' + imgId + ', lip: ' + str(res) + ' nose:' + str(ress) + ', predictRes: ' + str(predictRes))
         if int(imgId) in predictRes:
             shootCount += 1
         else:
             failCount += 1
-print(testDirPath + ': ' + str(shootCount) + ' success, ' + str(failCount) + ' fails, rate: ' + str(shootCount/(shootCount+failCount)))
+#print(testDirPath + ': ' + str(shootCount) + ' success, ' + str(failCount) + ' fails, rate: ' + str(shootCount/(shootCount+failCount)))
